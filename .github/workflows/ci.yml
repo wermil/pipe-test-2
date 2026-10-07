@@ -1,0 +1,14 @@
+name: ci
+on:
+  pull_request:
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: |
+          shopt -s nullglob
+          files=(tests/*_test.sh)
+          if [ ${#files[@]} -eq 0 ]; then echo "Тестів немає"; exit 0; fi
+          for f in "${files[@]}"; do echo "== $f"; bash "$f"; done

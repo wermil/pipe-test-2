@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "pipeline": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/.claude/pipeline/approve_server.py"]
+    }
+  }
+}

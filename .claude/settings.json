@@ -1,0 +1,19 @@
+{
+  "enableAllProjectMcpServers": true,
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "timeout": 60,
+          "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/pipeline/attest.sh\"" } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": ".*",
+        "hooks": [ { "type": "command",
+          "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/pipeline/gate.py\"; rc=$?; [ $rc -eq 0 ] && exit 0; exit 2" } ] }
+    ],
+    "ConfigChange": [
+      { "matcher": "user_settings|project_settings|local_settings",
+        "hooks": [ { "type": "command",
+          "command": "[ \"$CLAUDE_CODE_REMOTE\" = true ] || exit 0; mkdir -p \"$HOME/.pipeline\"; echo '{\"event\":\"ConfigChange\",\"blocked\":true}' >> \"$HOME/.pipeline/events.log\"; echo 'PIPELINE: налаштування в хмарній сесії змінювати не можна' >&2; exit 2" } ] }
+    ]
+  }
+}
