@@ -2,6 +2,7 @@ name: ci
 on:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -21,14 +22,22 @@ jobs:
   auto-merge:
     needs: ci
     if: >-
-      ${{ github.event.pull_request.draft == false &&
-          github.event.pull_request.head.repo.full_name == github.repository }}
+      ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: read
+      pull-requests: write
     steps:
-      - name: Squash merge successful pull request
+      - name: Mark PR ready
+        if: ${{ github.event.pull_request.draft }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh pr ready "$PR_NUMBER"
+
+      - name: Squash merge
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
