@@ -20,7 +20,7 @@ LINEAR_STATES = {"In Progress", "Done"}
 TASK_ID = re.compile(r"[A-Z][A-Z0-9]{0,9}-\d{1,6}")
 GITHUB_READ = re.compile(r"^mcp__[^_]*github[^_]*__(get|list|search)_")
 READ_CMD = re.compile(
-    r"^(cd\s+\S+|ls|cat|head|tail|grep|rg|find|wc|tree|pwd|echo|which|file|stat|du|sort|uniq|cut|tr|basename|dirname|"
+    r"^(cd\s+\S+|ls|cat|head|tail|grep|rg|find|wc|tree|pwd|echo|which|file|stat|du|sort|uniq|cut|tr|basename|dirname|sed|"
     r"check-tools|python3 \.claude/pipeline/report\.py|python3 \.claude/pipeline/plan_artifact\.py|"
     r"git (status|log|diff|show|ls-files|rev-parse|blame|grep)|git branch|git remote)(\s|$)")
 
@@ -47,6 +47,8 @@ def read_only(cmd):
         if seg.startswith("find") and re.search(r"\s-(exec|execdir|delete|fprint|fprint0|fprintf|fls|ok|okdir)\b", seg):
             return False
         if re.match(r"(sort|tree)\s", seg) and re.search(r"\s-o", seg):
+            return False
+        if seg.startswith("sed") and not re.fullmatch(r"sed -n\s+'?\d+(,(\d+|\$))?p'?(\s+[\w./-]+)+", seg):
             return False
         if re.match(r"uniq\s", seg) and len([a for a in seg.split()[1:] if not a.startswith("-")]) > 1:
             return False
