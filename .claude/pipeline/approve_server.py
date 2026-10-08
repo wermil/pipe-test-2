@@ -7,10 +7,12 @@ S = os.path.join(os.path.expanduser("~"), ".pipeline")
 KNOWN = {"2024-11-05", "2025-03-26", "2025-06-18"}
 TOOLS = [{
     "name": "approve_plan",
-    "description": "Погодити план задачі. Виконується лише після кліку розробника Allow. Передай ID задачі й короткий зміст плану.",
+    "description": "Погодити план задачі. Виконується лише після кліку розробника Allow. Передай ID задачі, короткий зміст плану, посилання на артефакт плану й sha плану.",
     "inputSchema": {"type": "object", "required": ["plan_id", "summary"],
                     "properties": {"plan_id": {"type": "string", "description": "ID задачі, наприклад LIN-1"},
-                                   "summary": {"type": "string", "description": "Зміст плану в 1–3 реченнях"}}},
+                                   "summary": {"type": "string", "description": "Зміст плану в 1–3 реченнях"},
+                                   "artifact_url": {"type": "string", "description": "Посилання на артефакт плану (https://claude.ai/…), якщо опубліковано"},
+                                   "plan_sha": {"type": "string", "description": "sha плану з виводу plan_artifact.py"}}},
     "_meta": {"anthropic/requiresUserInteraction": True},
 }]
 
@@ -42,10 +44,13 @@ for line in sys.stdin:
         reply(mid, {"tools": TOOLS})
     elif method == "tools/call" and req["params"].get("name") == "approve_plan":
         args = req["params"].get("arguments", {})
-        rec = {"plan_id": args.get("plan_id", ""), "summary": args.get("summary", ""), "at": now()}
+        url = str(args.get("artifact_url", ""))
+        rec = {"plan_id": args.get("plan_id", ""), "summary": args.get("summary", ""), "at": now(),
+               "artifact_url": url if url.startswith("https://claude.ai/") else "", "plan_sha": str(args.get("plan_sha", ""))[:64]}
         json.dump(rec, open(os.path.join(S, "approved.json"), "w"), ensure_ascii=False)
         with open(os.path.join(S, "events.log"), "a") as f:
-            f.write(json.dumps({"at": rec["at"], "event": "approve_plan", "plan_id": rec["plan_id"]}, ensure_ascii=False) + "\n")
+            f.write(json.dumps({"at": rec["at"], "event": "approve_plan", "plan_id": rec["plan_id"],
+                                "artifact_url": rec["artifact_url"], "plan_sha": rec["plan_sha"]}, ensure_ascii=False) + "\n")
         reply(mid, {"content": [{"type": "text", "text": f"План {rec['plan_id']} погоджено розробником о {rec['at']}. Можна переходити до реалізації."}]})
     elif method == "ping":
         reply(mid, {})

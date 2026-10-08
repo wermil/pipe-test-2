@@ -36,6 +36,10 @@ for e in [e for e in pt if e.get('decision') == 'deny'][:10]:
 apc = [e for e in ev if e.get('event') == 'approve_plan']
 print(f"approve_plan: {apc[-1]['at'] + ' ' + apc[-1].get('plan_id', '') if apc else 'не викликався або не погоджено'}")
 print(f"approved.json: {'так' if ap else 'ні'}")
+print(f"plan artifact: {(ap or {}).get('artifact_url') or 'немає'} | sha: {(ap or {}).get('plan_sha') or 'немає'}")
+lin = [e for e in pt if str(e.get('reason', '')).startswith('linear')]
+lc = [e for e in lin if e.get('reason') == 'linear-comment']
+print(f"linear: коментарів {len(lc)} ({', '.join(sorted({e.get('issue', '') for e in lc})) or '—'}), відмов {len([e for e in lin if e.get('decision') == 'deny'])}")
 cfg = [e for e in ev if e.get('event') == 'ConfigChange']
 print(f"ConfigChange заблоковано: {len(cfg)}")
 if "--diag" in sys.argv:
